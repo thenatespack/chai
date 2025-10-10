@@ -27,7 +27,7 @@ def main():
     #         There are many ways to do this. Devise a plan and implement your own solution.
     db_manager.save_index()
     threads= db_manager.get_threads(user_id)
-    conversation_id = f"{user_id}_conversation"
+    conversation_id = f"{user_id}_0_conversation"
 
     if(len(threads)>0):
         index=0
@@ -39,6 +39,9 @@ def main():
             if(id>-1 and id< len(threads) ):
                 conversation_id = threads[id]
                 print(conversation_id)
+                break
+            else:
+                conversation_id = f"{user_id}_{len(threads)}_conversation"
                 break
 
     run_chat(db_manager, conversation_id,user_id)
