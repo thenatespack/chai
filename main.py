@@ -26,10 +26,24 @@ def main():
     #   Hint: This is not a "clean" addition, you may need to restructure how data is stored and indexed
     #         There are many ways to do this. Devise a plan and implement your own solution.
     db_manager.save_index()
+    threads= db_manager.get_threads(user_id)
     conversation_id = f"{user_id}_conversation"
-    run_chat(db_manager, conversation_id)
 
-def run_chat(db_manager: FlatFileManager, conversation_id: str) -> None:
+    if(len(threads)>0):
+        index=0
+        for thread in threads:
+            print(f"{index}: {thread}")
+        while True:
+            print("Select Option: ")
+            id=int(input(">"))
+            if(id>-1 and id< len(threads) ):
+                conversation_id = threads[id]
+                print(conversation_id)
+                break
+
+    run_chat(db_manager, conversation_id,user_id)
+
+def run_chat(db_manager: FlatFileManager, conversation_id: str,user_id:str) -> None:
     # --- TODO 2: Check if conversation already exists, printout conversation if so ---
     #   - Add a timer that times how long it took to use get_conversation and print the results after
     start_time = time.perf_counter()
@@ -73,7 +87,7 @@ def run_chat(db_manager: FlatFileManager, conversation_id: str) -> None:
         #    Call your db_manager's save method.
         relative_filepath = f"{conversation_id}.json"
         # fixme! use db manager save method here
-        db_manager.save_conversation(conversation_id,relative_filepath,messages)
+        db_manager.save_conversation(conversation_id,relative_filepath,messages,user_id)
         # ----------------------------------------------------
 
         # --- TODO 5: Stop the timer and calculate duration ---

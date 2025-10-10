@@ -71,17 +71,25 @@ class FlatFileManager:
             Hint: Use a try-except block to handle error case.
         """
         try:
-            filepath = self.conversations_index[conversation_id]
-            conversation_file = os.path.join(self.storage_dir,filepath)
+            thread = self.conversations_index.get(conversation_id)
+            conversation_file = os.path.join(self.storage_dir,thread["filepath"])
             with open(conversation_file, "r") as f:
                 return json.load(f)
         except:
             return []
-        
 
-        
+    
+    def get_threads(self, user_id: str) -> List[any]:
+        threads = []
+        for cid, entry in self.conversations_index.items():
+            if entry.get("user_id") == user_id:
+                try:
+                    threads.append(cid)
+                except Exception:
+                    continue
+        return threads
 
-    def save_conversation(self, conversation_id: str, relative_filepath: str, messages: List[any]) -> None:
+    def save_conversation(self, conversation_id: str, relative_filepath: str, messages: List[any],user_id: str) -> None:
         """
         --- TODO 5: Save a user's conversation ---
         1 - Add the conversation ID and filepath to self.conversation_index
@@ -92,7 +100,7 @@ class FlatFileManager:
             - Use JSON formatting to make the file human-readable (e.g., indentation).
             Hint: Use `json.dump()` with the `indent` parameter.
         """
-        self.conversations_index[conversation_id]=relative_filepath
+        self.conversations_index[conversation_id]=({"filepath":relative_filepath,"user_id":user_id})
         try:
                with open(os.path.join(self.storage_dir, relative_filepath), "w", encoding="utf-8") as f:
                     json.dump(messages, f, indent=2)

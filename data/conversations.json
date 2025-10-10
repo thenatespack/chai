@@ -1,4 +1,6 @@
 {
-  "22_conversation": "22_conversation.json",
-  "12_conversation": "12_conversation.json"
+  "2_conversation": {
+    "filepath": "2_conversation.json",
+    "user_id": "2"
+  }
 }
