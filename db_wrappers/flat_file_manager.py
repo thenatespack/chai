@@ -8,6 +8,7 @@ class FlatFileManager:
     """
     Manages storing and retrieving chat conversations in flat JSON files.
     """
+
     def __init__(self, storage_dir="data"):
         """
         Initializes the FlatFileManager for a specific user.
@@ -17,7 +18,7 @@ class FlatFileManager:
         """
         self.storage_dir = storage_dir
         self._ensure_storage_exists()
-        self.conversations_index = {} 
+        self.conversations_index = {}  # Key: conversation_id => Value: Filepath
         self._init_index()
 
     def _ensure_storage_exists(self) -> None:
@@ -27,10 +28,7 @@ class FlatFileManager:
         If it doesn't exist, this method should create it.
         Hint: Use os.makedirs() and its `exist_ok` parameter.
         """
-        if(not os.path.exists(self.storage_dir)):   
-            os.makedirs(self.storage_dir)
-
-
+        os.makedirs(self.storage_dir, exist_ok=True)
 
     def _init_index(self) -> None:
         """
@@ -40,26 +38,26 @@ class FlatFileManager:
         3 - Load the contents of conversations.json into self.conversations_index dictionary
         """
         index_file = os.path.join(self.storage_dir, "conversations.json")
-        if(not os.path.exists(index_file)):
+
+        if not os.path.exists(index_file):
+            self.conversations_index = {}
             self.save_index()
-        with open(index_file, "r") as f:
-            self.conversations_index = json.load(f)
+        else:
+            with open(index_file, 'r') as f:
+                self.conversations_index = json.load(f)
 
     def save_index(self) -> None:
         """
         --- TODO 3: Save the conversations index to disk ---
-        This method should save the current state of self.conversations_index 
+        This method should save the current state of self.conversations_index
         to the conversations.json file in the storage directory.
         Ensure the JSON is human-readable by using proper formatting.
         Hint: Use json.dump() with the 'indent' parameter for readable formatting.
         """
         index_file = os.path.join(self.storage_dir, "conversations.json")
-        try:
-               with open(index_file, "w", encoding="utf-8") as f:
-                    json.dump(self.conversations_index, f, indent=2)
-        except FileNotFoundError:
-            print("file.txt not found")
-       
+        with open(index_file, 'w') as f:
+            json.dump(self.conversations_index, f, indent=2)
+
     def get_conversation(self, conversation_id: str) -> List[any]:
         """
         --- TODO 4: Retrieve a user's conversation ---
@@ -70,26 +68,19 @@ class FlatFileManager:
             - If the file does not exist it should return an empty list `[]` without raising an error.
             Hint: Use a try-except block to handle error case.
         """
-        try:
-            thread = self.conversations_index.get(conversation_id)
-            conversation_file = os.path.join(self.storage_dir,thread["filepath"])
-            with open(conversation_file, "r") as f:
-                return json.load(f)
-        except:
+        if conversation_id not in self.conversations_index:
             return []
 
-    
-    def get_threads(self, user_id: str) -> List[any]:
-        threads = []
-        for cid, entry in self.conversations_index.items():
-            if entry.get("user_id") == user_id:
-                try:
-                    threads.append(cid)
-                except Exception:
-                    continue
-        return threads
+        filepath = os.path.join(self.storage_dir, self.conversations_index[conversation_id])
 
-    def save_conversation(self, conversation_id: str, relative_filepath: str, messages: List[any],user_id: str) -> None:
+        try:
+            with open(filepath, 'r') as f:
+                messages = json.load(f)
+            return messages
+        except FileNotFoundError:
+            return []
+
+    def save_conversation(self, conversation_id: str, relative_filepath: str, messages: List[any]) -> None:
         """
         --- TODO 5: Save a user's conversation ---
         1 - Add the conversation ID and filepath to self.conversation_index
@@ -100,13 +91,16 @@ class FlatFileManager:
             - Use JSON formatting to make the file human-readable (e.g., indentation).
             Hint: Use `json.dump()` with the `indent` parameter.
         """
-        self.conversations_index[conversation_id]=({"filepath":relative_filepath,"user_id":user_id})
-        try:
-               with open(os.path.join(self.storage_dir, relative_filepath), "w", encoding="utf-8") as f:
-                    json.dump(messages, f, indent=2)
-        except FileNotFoundError:
-            print("file.txt already exists, exclusive creation aborted.")
-       
+        # Add to index
+        self.conversations_index[conversation_id] = relative_filepath
+
+        # Save index to disk
+        self.save_index()
+
+        # Save conversation to disk
+        filepath = os.path.join(self.storage_dir, relative_filepath)
+        with open(filepath, 'w') as f:
+            json.dump(messages, f, indent=2)
 
     def run_tests(self):
         print("Testing FlatFileManager._ensure_storage_exists()")
@@ -126,7 +120,7 @@ class FlatFileManager:
             print("Failed to save conversation!")
             return
         print("Successfully saved conversation!")
-        self.save_index()
+
         print("Testing FlatFileManager.get_conversation()")
         read_messages = self.get_conversation(conversation_id)
         if not read_messages:
@@ -141,6 +135,7 @@ class FlatFileManager:
             print(f"Failed to delete storage directory: {e}")
 
         print("All tests passed!")
+
 
 if __name__ == "__main__":
     print("Testing FlatFileManager")
